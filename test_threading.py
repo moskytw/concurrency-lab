@@ -19,6 +19,7 @@ class WaitingQueue(object):
         self._q = deque(iterable)
         # yeah, it's the condition mechanism
         self._wait_lock_q = deque()
+        self._waiting = True
 
     def put(self, x):
 
@@ -32,6 +33,7 @@ class WaitingQueue(object):
                 pass
             else:
                 # notify the waiting take
+                wait_lock.acquire(0)
                 wait_lock.release()
 
     def take(self):
@@ -41,7 +43,8 @@ class WaitingQueue(object):
             try:
                 return self._q.popleft()
             except IndexError:
-                pass
+                if not self._waiting:
+                    raise
 
             # create an unique wait lock
             wait_lock = Lock()
@@ -49,35 +52,58 @@ class WaitingQueue(object):
             self._wait_lock_q.append(wait_lock)
 
         # wait to be notify
-        with wait_lock:
-            return self.take()
+        wait_lock.acquire()
+        return self.take()
 
     def stop_waiting(self):
 
-if __name__ == '__main__':
+        with self._lock:
 
-    q = WaitingQueue(range(10))
+            self._waiting = False
+
+            for wait_lock in self._wait_lock_q:
+                wait_lock.acquire(0)
+                wait_lock.release()
+
+if __name__ == '__main__':
 
     def consume():
 
         while 1:
-            x = q.take()
+
+            # try to take
+            try:
+                x = q.take()
+            except IndexError:
+                log('Got nothing.'.format(x))
+                return
+
+            # consume
             log('Consuming {}...'.format(x))
             sleep(0.1)
             log('Consumed {}.'.format(x))
 
+    q = WaitingQueue(range(4))
     for t in [Thread(target=consume) for i in range(3)]:
         t.start()
 
-    sleep(0.1)
-    for x in 'AB':
+    # test to add tasks asyncly
+    for x in 'ABC':
         q.put(x)
         log('Put {} into queue.'.format(x))
 
-    sleep(2)
-    for x in 'XY':
+    # test to add tasks after queue empties
+    sleep(0.8)
+    for x in 'MNOP':
         q.put(x)
         log('Put {} into queue.'.format(x))
 
-    log('End of Main')
+    # test to add tasks after stop waiting
+    q.stop_waiting()
+    sleep(0.5)
+    for x in 'ST':
+        q.put(x)
+        log('Put {} into queue.'.format(x))
+
+    log('End of Main.')
 
