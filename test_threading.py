@@ -11,23 +11,52 @@ def log(s):
     with _log_lock:
         print '[{}] {}'.format(strftime('%Y-%m-%d %H:%M:%S'), s)
 
-class BlockingQueue(object):
+class WaitingQueue(object):
 
     def __init__(self, iterable):
-        self._op_lock = Lock()
+
+        self._lock = Lock()
         self._q = deque(iterable)
+        # yeah, it's the condition mechanism
+        self._wait_lock_q = deque()
 
     def put(self, x):
-        with self._op_lock:
+
+        with self._lock:
+
             self._q.append(x)
 
+            try:
+                wait_lock = self._wait_lock_q.popleft()
+            except IndexError:
+                pass
+            else:
+                # notify the waiting take
+                wait_lock.release()
+
     def take(self):
-        with self._op_lock:
-            return self._q.popleft()
+
+        with self._lock:
+
+            try:
+                return self._q.popleft()
+            except IndexError:
+                pass
+
+            # create an unique wait lock
+            wait_lock = Lock()
+            wait_lock.acquire() # lock it
+            self._wait_lock_q.append(wait_lock)
+
+        # wait to be notify
+        with wait_lock:
+            return self.take()
+
+    def stop_waiting(self):
 
 if __name__ == '__main__':
 
-    q = BlockingQueue(range(10))
+    q = WaitingQueue(range(10))
 
     def consume():
 
