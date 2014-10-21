@@ -85,10 +85,11 @@ if __name__ == '__main__':
         while 1:
 
             # try to take
+            log('Trying to get ...')
             try:
                 x = q.take()
             except IndexError:
-                log('Stopped.'.format(x))
+                log('Failed to get. Stop.'.format(x))
                 return
 
             # consume
