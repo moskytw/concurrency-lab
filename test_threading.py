@@ -128,5 +128,5 @@ if __name__ == '__main__':
         q.put(x)
         log('Produced {}.'.format(x))
 
-    log('End of Main.')
+    log('End of main.')
 
