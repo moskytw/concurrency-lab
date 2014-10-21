@@ -2,14 +2,18 @@
 # -*- coding: utf-8 -*-
 
 from time import strftime, sleep
-from threading import Lock, Thread
+from threading import Lock, Thread, current_thread
 from collections import deque
 
 _log_lock = Lock()
 
 def log(s):
     with _log_lock:
-        print '[{}] {}'.format(strftime('%Y-%m-%d %H:%M:%S'), s)
+        print '[{}] [{}] {}'.format(
+            strftime('%Y-%m-%d %H:%M:%S'),
+            current_thread().name,
+            s
+        )
 
 class WaitingQueue(object):
 
