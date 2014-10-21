@@ -89,12 +89,14 @@ if __name__ == '__main__':
         while 1:
 
             # try to take
-            log('Trying to get ...')
+            log('Trying to take ...')
             try:
                 x = q.take()
             except IndexError:
-                log('Failed to get. Stop.'.format(x))
+                log('Failed to take. Stop.'.format(x))
                 return
+            else:
+                log('Took {}.'.format(x))
 
             # consume
             log('Consuming {}...'.format(x))
