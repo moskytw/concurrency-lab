@@ -88,7 +88,7 @@ if __name__ == '__main__':
             try:
                 x = q.take()
             except IndexError:
-                log('Got nothing.'.format(x))
+                log('Stopped.'.format(x))
                 return
 
             # consume
@@ -102,21 +102,24 @@ if __name__ == '__main__':
 
     # test to add tasks asyncly
     for x in 'ABC':
+        log('Producing {}...'.format(x))
         q.put(x)
-        log('Put {} into queue.'.format(x))
+        log('Produced {}.'.format(x))
 
     # test to add tasks after queue empties
     sleep(0.8)
     for x in 'MNOP':
+        log('Producing {}...'.format(x))
         q.put(x)
-        log('Put {} into queue.'.format(x))
+        log('Produced {}.'.format(x))
 
     # test to add tasks after stop waiting
     q.stop_waiting()
     sleep(0.5)
     for x in 'ST':
+        log('Producing {}...'.format(x))
         q.put(x)
-        log('Put {} into queue.'.format(x))
+        log('Produced {}.'.format(x))
 
     log('End of Main.')
 
