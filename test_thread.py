@@ -16,7 +16,7 @@ def log(s):
 
 class WaitingQueue(object):
 
-    def __init__(self, iterable):
+    def __init__(self, iterable=()):
 
         # only single thread can access its attrs at the same time
         self._lock = allocate_lock()
@@ -24,11 +24,11 @@ class WaitingQueue(object):
         # the task queue
         self._q = deque(iterable)
 
-        # if `take` when `_q` is empty, wait it or raise IndexError
-        self._waiting = True
-
         # yeah, it's the condition mechanism, better than the built-in one
         self._wait_lock_q = deque()
+
+        # if `take` when `_q` is empty, wait it or raise IndexError
+        self._waiting = True
 
     def put(self, x):
 
