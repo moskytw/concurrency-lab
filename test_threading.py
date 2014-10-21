@@ -33,7 +33,6 @@ class WaitingQueue(object):
                 pass
             else:
                 # notify the waiting take
-                wait_lock.acquire(0)
                 wait_lock.release()
 
     def take(self):
@@ -61,8 +60,8 @@ class WaitingQueue(object):
 
             self._waiting = False
 
-            for wait_lock in self._wait_lock_q:
-                wait_lock.acquire(0)
+            while self._wait_lock_q:
+                wait_lock = self._wait_lock_q.popleft()
                 wait_lock.release()
 
 if __name__ == '__main__':
