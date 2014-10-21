@@ -15,29 +15,41 @@ class WaitingQueue(object):
 
     def __init__(self, iterable):
 
+        # only single thread can access its attrs at the same time
         self._lock = Lock()
+
+        # the task queue
         self._q = deque(iterable)
-        # yeah, it's the condition mechanism
-        self._wait_lock_q = deque()
+
+        # if `take` when `_q` is empty, wait it or raise IndexError
         self._waiting = True
+
+        # yeah, it's the condition mechanism, better than the built-in one
+        self._wait_lock_q = deque()
 
     def put(self, x):
 
         with self._lock:
 
+            # simply append it
             self._q.append(x)
 
+            # notify a waiting take-thread
             try:
                 wait_lock = self._wait_lock_q.popleft()
             except IndexError:
                 pass
             else:
-                # notify the waiting take
                 wait_lock.release()
 
     def take(self):
 
         with self._lock:
+
+            # pop
+            # case 1: simply return it
+            # case 2: wait for a `put`
+            # case 3: raise IndexError
 
             try:
                 return self._q.popleft()
@@ -47,10 +59,10 @@ class WaitingQueue(object):
 
             # create an unique wait lock
             wait_lock = Lock()
-            wait_lock.acquire() # lock it
+            wait_lock.acquire()
             self._wait_lock_q.append(wait_lock)
 
-        # wait to be notify
+        # acquire it secondly to wait and be notified
         wait_lock.acquire()
         return self.take()
 
@@ -58,8 +70,10 @@ class WaitingQueue(object):
 
         with self._lock:
 
+            # let the futher take-thread raise
             self._waiting = False
 
+            # notify all waiting take-threads
             while self._wait_lock_q:
                 wait_lock = self._wait_lock_q.popleft()
                 wait_lock.release()
