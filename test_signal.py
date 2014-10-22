@@ -12,7 +12,6 @@ def do_fun_things(signum, frame):
 
     print "I'm {}. I just caught {}. I am leaving ...".format(getpid(), signum)
 
-    cpid = frame.f_globals['cpid']
     if cpid is None:
         exit(signum)
     elif cpid != 0:
