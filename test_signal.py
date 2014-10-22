@@ -15,8 +15,9 @@ def do_fun_things(signum, frame):
     if cpid is None:
         exit(signum)
     elif cpid != 0:
-        # ctrl-c will send to both, but kill <pid> won't
-        # use kill to relay signal
+        # ctrl-c will send to both, but kill <pid> won't, so use kill to relay
+        # signal.
+        # kill -TERM -<pid> works well, btw.
         kill(cpid, signum)
         exit(signum)
     else:
