@@ -2,13 +2,21 @@
 # -*- coding: utf-8 -*-
 
 from sys import exit
-from os import getpid, fork
+from os import getpid, fork, _exit
 from time import sleep
 from signal import signal, SIGINT, SIGKILL, SIGTERM, SIG_DFL
 
+cpid = None
+
 def print_n_exit(signum, frame):
+
     print "I'm {}. I just caught {}. I am leaving ...".format(getpid(), signum)
-    exit(signum)
+
+    cpid = frame.f_globals['cpid']
+    if cpid is None or cpid != 0:
+        exit(signum)
+    else:
+        _exit(signum)
 
 signal(SIGINT, print_n_exit)
 # can't be caught
@@ -17,10 +25,9 @@ signal(SIGTERM, print_n_exit)
 
 def main():
 
+    global cpid
+
     cpid = fork()
-    if cpid == 0:
-        signal(SIGINT, SIG_DFL)
-        signal(SIGTERM, SIG_DFL)
 
     print "I'm {}. I forked {}.".format(getpid(), cpid)
 
