@@ -8,7 +8,7 @@ from signal import signal, SIGINT, SIGKILL, SIGTERM, SIG_DFL
 
 cpid = None
 
-def print_n_exit(signum, frame):
+def do_fun_things(signum, frame):
 
     print "I'm {}. I just caught {}. I am leaving ...".format(getpid(), signum)
 
@@ -23,10 +23,10 @@ def print_n_exit(signum, frame):
     else:
         _exit(signum)
 
-signal(SIGINT, print_n_exit)
+signal(SIGINT, do_fun_things)
 # can't be caught
-#signal(SIGKILL, print_signal)
-signal(SIGTERM, print_n_exit)
+#signal(SIGKILL, do_fun_things)
+signal(SIGTERM, do_fun_things)
 
 def main():
 
