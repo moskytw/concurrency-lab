@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from sys import exit
-from os import getpid, kill, fork, _exit
+from os import getpid, getppid, kill, fork, _exit
 from time import sleep
 from signal import signal, SIGINT, SIGKILL, SIGTERM, SIG_DFL
 
@@ -20,6 +20,7 @@ def do_fun_things(signum, frame):
         kill(cpid, signum)
         exit(signum)
     else:
+        kill(getppid(), signum)
         _exit(signum)
 
 signal(SIGINT, do_fun_things)
