@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from sys import exit
-from os import getpid, fork, _exit
+from os import getpid, kill, fork, _exit
 from time import sleep
 from signal import signal, SIGINT, SIGKILL, SIGTERM, SIG_DFL
 
@@ -13,7 +13,12 @@ def print_n_exit(signum, frame):
     print "I'm {}. I just caught {}. I am leaving ...".format(getpid(), signum)
 
     cpid = frame.f_globals['cpid']
-    if cpid is None or cpid != 0:
+    if cpid is None:
+        exit(signum)
+    elif cpid != 0:
+        # ctrl-c will send to both, but kill <pid> won't
+        # use kill to relay signal
+        kill(cpid, signum)
         exit(signum)
     else:
         _exit(signum)
