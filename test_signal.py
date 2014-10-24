@@ -1,37 +1,36 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from os import getpid, getpgid, killpg, _exit, fork
 from sys import exit
-from os import getpid, getppid, kill, fork, _exit
+from signal import signal, SIGINT, SIGTERM, SIG_IGN
 from time import sleep
-from signal import signal, SIGINT, SIGKILL, SIGTERM, SIG_DFL
 
-cpid = None
+def broadcast_to_proc_group(signum, frame):
 
-def do_fun_things(signum, frame):
+    pid = getpid()
+    pgid = getpgid(0)
+    proc_is_parent = (pid == pgid)
 
-    print "I'm {}. I just caught {}. I am leaving ...".format(getpid(), signum)
+    print '{} {} got {}, broadcast the signal and exit {}.'.format(
+        'parent' if proc_is_parent else 'child',
+        pid,
+        signum,
+        'gracefully' if proc_is_parent else 'immediately'
+    )
 
-    if cpid is None:
-        exit(signum)
-    elif cpid != 0:
-        # ctrl-c will send to both, but kill <pid> won't, so use kill to relay
-        # signal.
-        # kill -TERM -<pid> works well, btw.
-        kill(cpid, signum)
+    signal(signum, SIG_IGN)
+    killpg(pgid, signum)
+
+    if proc_is_parent:
         exit(signum)
     else:
-        kill(getppid(), signum)
         _exit(signum)
-
-signal(SIGINT, do_fun_things)
-# can't be caught
-#signal(SIGKILL, do_fun_things)
-signal(SIGTERM, do_fun_things)
 
 def main():
 
-    global cpid
+    signal(SIGINT, broadcast_to_proc_group)
+    signal(SIGTERM, broadcast_to_proc_group)
 
     cpid = fork()
 
